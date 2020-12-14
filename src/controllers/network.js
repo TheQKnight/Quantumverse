@@ -22,5 +22,8 @@ export default {
   },
   createLobby(publicLobby, user) {
     return instance.post('/lobby/create', {public: publicLobby, user})
+  },
+  getChessDefaults() {
+    return instance.get('/lobby/default/chess')
   }
 }

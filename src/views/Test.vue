@@ -27,43 +27,48 @@
 
 <script>
 /* eslint-disable */
+import client from '@/controllers/client'
+import server from '@/controllers/server'
+
+import req from '@/controllers/network'
+
 export default {
   name: 'Test',
   data: () => ({
-    canvas: null,
     canvasContainer: null,
-    c: null,
-    uiContainer: null,
-
-    mouseX: null,
-    mouseY: null,
-    layoutMap: [],
-    game: {
-      layout: {
-        xMax: 7,
-        yMax: 7
-      }
-    }
+    client: null,
+    game: null
   }),
   methods: {
-    initCanvas() {
-      this.canvas = document.getElementById('gameCanvas')
-      this.canvasContainer = document.getElementById('canvasContainer')
-      this.uiContainer = document.getElementById('uiContainer')
-      this.c = this.canvas.getContext('2d')
+    async initCanvas() {
+      try {
+        const res = await req.getChessDefaults()
+        this.game = res.data
 
-      this.onWindowResize()
-      window.onresize = this.onWindowResize
+        this.canvasContainer = document.getElementById('canvasContainer')
+        const canvas = document.getElementById('gameCanvas')
+        this.client = new client.GameBoard({
+          canvas, 
+          xMax: this.game.layout.xMax, 
+          yMax: this.game.layout.yMax
+        })
+        this.client.init(document)
 
-      this.animateCanvas()
+        this.onWindowResize()
+        window.onresize = this.onWindowResize
 
+        this.animateCanvas()
+
+      } catch (err) {
+        console.log(err)
+      }
     },
     setupSpaces() {
-      this.layoutMap = []
-      var c = this.c
+      var c = this.client.c
+      var canvas = this.client.canvas
 
-      const canvasXSplit = this.canvas.width / (this.game.layout.xMax + 1)
-      const canvasYSplit = this.canvas.height / (this.game.layout.yMax + 1)
+      const canvasXSplit = canvas.width / (this.game.layout.xMax + 1)
+      const canvasYSplit = canvas.height / (this.game.layout.yMax + 1)
 
       // Setup squares for x
       let onCanvasY = 0
@@ -75,36 +80,25 @@ export default {
         for (var x = 0; x < this.game.layout.xMax + 1; x++) {
           const oldCanvasX = onCanvasX
           onCanvasX += canvasXSplit
-          if (x % 2 === 0 && y % 2 === 0 || x % 2 !== 0 && y % 2 !== 0) {
-            c.fillStyle = 'white'
-          } else {
-            c.fillStyle = 'black'
-          }
-          c.fillRect(oldCanvasX, oldCanvasY, onCanvasX, onCanvasY);
 
-          // Push to layout map
-          this.layoutMap.push({
-            x,
-            y,
-            fromX: oldCanvasX,
-            fromY: oldCanvasY,
-            toX: onCanvasX,
-            toY: onCanvasY
+          const gameSquare = new client.GameSquare({
+            layoutX: x,
+            layoutY: y,
+            fromX: Math.round(oldCanvasX),
+            fromY: Math.round(oldCanvasY),
+            toX: Math.round(onCanvasX),
+            toY: Math.round(onCanvasY)
           })
+
+          this.client.pushToRenderQue(gameSquare)
+
         }
       }
     },
     animateCanvas() {
       requestAnimationFrame(this.animateCanvas)
 
-      this.renderCanvas(true)
-    },
-    renderCanvas(skipSetup) {
-      if (skipSetup !== true) {
-        this.c.clearRect(0, 0, innerWidth, innerHeight)
-        this.setupSpaces()
-      }
-
+      this.client.render()
     },
     onWindowResize() {
       const canvasContainerHeight = this.canvasContainer.clientHeight
@@ -124,17 +118,15 @@ export default {
 
       if (projectedCanvasWidthFromHeight < canvasContainerWidth) {
         // Perform this if widths overlap
-        this.canvas.width = projectedCanvasWidthFromHeight
-        this.canvas.height = projectedCanvasHeightFromHeight
+        this.client.setCanvasSize(Math.round(projectedCanvasWidthFromHeight), Math.round(projectedCanvasHeightFromHeight))
       }
 
       if (projectedCanvasHeightFromWidth < canvasContainerHeight) {
         // Perform this if widths overlap but height doesnt
-        this.canvas.width = projectedCanvasWidthFromWidth
-        this.canvas.height = projectedCanvasHeightFromWidth
+        this.client.setCanvasSize(Math.round(projectedCanvasWidthFromWidth), Math.round(projectedCanvasHeightFromWidth))
       }
       
-      this.renderCanvas()
+      this.setupSpaces()
     }
   },
   mounted () {
@@ -172,7 +164,7 @@ export default {
 }
 
 #gameCanvas {
-  background: rgb(0, 0, 0);
+  background: rgb(168, 0, 0);
 }
 
 .flexLeft {
