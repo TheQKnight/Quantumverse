@@ -25,5 +25,8 @@ export default {
   },
   getChessDefaults() {
     return instance.get('/lobby/default/chess')
+  },
+  getAssets() {
+    return instance.get('/assets/list')
   }
 }

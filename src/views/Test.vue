@@ -36,7 +36,7 @@ export default {
   name: 'Test',
   data: () => ({
     canvasContainer: null,
-    client: null,
+    board: null,
     game: null
   }),
   methods: {
@@ -47,58 +47,27 @@ export default {
 
         this.canvasContainer = document.getElementById('canvasContainer')
         const canvas = document.getElementById('gameCanvas')
-        this.client = new client.GameBoard({
+
+        this.board = new client.GameBoard({
           canvas, 
           xMax: this.game.layout.xMax, 
           yMax: this.game.layout.yMax
         })
-        this.client.init(document)
+        this.board.init(document)
 
         this.onWindowResize()
         window.onresize = this.onWindowResize
 
-        this.animateCanvas()
+        this.animate()
 
       } catch (err) {
         console.log(err)
       }
     },
-    setupSpaces() {
-      var c = this.client.c
-      var canvas = this.client.canvas
+    animate() {
+      requestAnimationFrame(this.animate)
 
-      const canvasXSplit = canvas.width / (this.game.layout.xMax + 1)
-      const canvasYSplit = canvas.height / (this.game.layout.yMax + 1)
-
-      // Setup squares for x
-      let onCanvasY = 0
-      for (var y = 0; y < this.game.layout.yMax + 1; y++) {
-        const oldCanvasY = onCanvasY
-        onCanvasY += canvasYSplit
-
-        let onCanvasX = 0
-        for (var x = 0; x < this.game.layout.xMax + 1; x++) {
-          const oldCanvasX = onCanvasX
-          onCanvasX += canvasXSplit
-
-          const gameSquare = new client.GameSquare({
-            layoutX: x,
-            layoutY: y,
-            fromX: Math.round(oldCanvasX),
-            fromY: Math.round(oldCanvasY),
-            toX: Math.round(onCanvasX),
-            toY: Math.round(onCanvasY)
-          })
-
-          this.client.pushToRenderQue(gameSquare)
-
-        }
-      }
-    },
-    animateCanvas() {
-      requestAnimationFrame(this.animateCanvas)
-
-      this.client.render()
+      this.board.render()
     },
     onWindowResize() {
       const canvasContainerHeight = this.canvasContainer.clientHeight
@@ -118,15 +87,16 @@ export default {
 
       if (projectedCanvasWidthFromHeight < canvasContainerWidth) {
         // Perform this if widths overlap
-        this.client.setCanvasSize(Math.round(projectedCanvasWidthFromHeight), Math.round(projectedCanvasHeightFromHeight))
+        this.board.setCanvasSize(Math.round(projectedCanvasWidthFromHeight), Math.round(projectedCanvasHeightFromHeight))
+        return;
       }
 
       if (projectedCanvasHeightFromWidth < canvasContainerHeight) {
         // Perform this if widths overlap but height doesnt
-        this.client.setCanvasSize(Math.round(projectedCanvasWidthFromWidth), Math.round(projectedCanvasHeightFromWidth))
+        this.board.setCanvasSize(Math.round(projectedCanvasWidthFromWidth), Math.round(projectedCanvasHeightFromWidth))
+        return;
       }
-      
-      this.setupSpaces()
+
     }
   },
   mounted () {
