@@ -7,21 +7,24 @@ class AssetLoader {
     this.assetsLoaded = 0
     this.assetsTotal = 100
     this.assetsErrored = 0
-    this.assets = {}
+    this.images = {}
     this.animations = {}
 
-    this.loadingFunction = options.loadingFunction || function () { console.log(`${this.assetsLoaded} / ${this.assetsTotal}`) }
+    this.loadingInterval = null
+  }
+
+  async loadAllAssets(loadingFunction) {
+    // Setup load checker
     this.loadingInterval = setInterval(function () {
-      this.loadingFunction(this.assetsLoaded, this.assetsTotal, this.assetsErrored)
+      if (loadingFunction) this.loadingFunction(this.assetsLoaded, this.assetsTotal, this.assetsErrored)
       if (this.assetsLoaded === this.assetsTotal) {
         clearInterval(this.loadingInterval)
+        this.loadingInterval = null
       }
     }.bind(this), 10)
 
-  }
-
-  async loadAllAssets() {
-
+    // Retrieve assets
+    this.retrieveAssets()
   }
   
   async retrieveAssets() {
@@ -58,7 +61,7 @@ class AssetLoader {
           }.bind(this)
 
           imageObj.src = totalAssetPath
-          this.assets[asset] = imageObj
+          this.images[asset] = imageObj
         }
       })
 
