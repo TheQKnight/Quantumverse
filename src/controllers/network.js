@@ -23,10 +23,11 @@ export default {
   createLobby(publicLobby, user) {
     return instance.post('/lobby/create', {public: publicLobby, user})
   },
-  getChessDefaults() {
-    return instance.get('/lobby/default/chess')
+  // Assets
+  getGames() {
+    return instance.get('/assets/games')
   },
-  getAssets() {
-    return instance.get('/assets/list')
-  }
+  getGameAssets(game) {
+    return instance.get(`/assets?game=${game}`)
+  },
 }

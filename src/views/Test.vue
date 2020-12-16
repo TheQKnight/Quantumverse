@@ -7,7 +7,20 @@
       Mobile bar
     </div>
     <div class="flexLeft">
-      Game stats
+      <div v-if="dev" class="devFlex">
+        Dev mode on
+      </div>
+      <div v-if="dev" class="devFlex">
+        <button class="devBtn" @click="spawnAnimation">
+          Spawn Animation
+        </button>
+        <button class="devBtn" @click="spawnImage">
+          Spawn Image
+        </button>
+        <button class="devBtn" @click="getSelectedPos">
+          Get Selected Position
+        </button>
+      </div>
     </div>
     <div class="flexMiddle">
       <div id="canvasContainer">
@@ -18,9 +31,6 @@
     </div>
     <div class="flexRight">
       Chat and game info
-    </div>
-    <div id="temp">
-      
     </div>
   </div>
 </template>
@@ -35,23 +45,38 @@ import req from '@/controllers/network'
 export default {
   name: 'Test',
   data: () => ({
+    dev: true,
     canvasContainer: null,
     board: null,
-    game: null
+    game: {
+      layout: {
+        xMax: 7,
+        yMax: 7
+      }
+    }
   }),
   methods: {
+    getSelectedPos() {
+      alert(`${this.board.selectedLocation.x}, ${this.board.selectedLocation.y}\n\nFromX: ${this.board.selectedLocation.fromX}\nFromY: ${this.board.selectedLocation.fromY}\ntoX: ${this.board.selectedLocation.toX}\ntoY: ${this.board.selectedLocation.toY}`)
+    },
+    spawnAnimation() {
+      console.log(`${this.board.selectedLocation.x}, ${this.board.selectedLocation.y}`)
+      this.board.spawnAnimationAtSquare('black_pawn_jump', this.board.selectedLocation.x, this.board.selectedLocation.y)
+    },
+    spawnImage() {
+      console.log(`${this.board.selectedLocation.x}, ${this.board.selectedLocation.y}`)
+      this.board.spawnImageAtSquare('black/bishop.png', this.board.selectedLocation.x, this.board.selectedLocation.y)
+    },
     async initCanvas() {
       try {
-        const res = await req.getChessDefaults()
-        this.game = res.data
-
         this.canvasContainer = document.getElementById('canvasContainer')
         const canvas = document.getElementById('gameCanvas')
 
         this.board = new client.GameBoard({
           canvas, 
           xMax: this.game.layout.xMax, 
-          yMax: this.game.layout.yMax
+          yMax: this.game.layout.yMax,
+          dev: this.dev
         })
         this.board.init(document)
 
@@ -106,10 +131,27 @@ export default {
 </script>
 
 <style>
-
-#temp {
-  display: none;
+.devBtn:active {
+  background: white;
+  border: none;
+  border-radius: 2px;
+  margin: 4px;
+  cursor: grab;
 }
+
+.devBtn {
+  background: white;
+  border: none;
+  border-radius: 2px;
+  margin: 4px;
+}
+
+.devFlex {
+  width: 100%;
+  background: black;
+  color: white;
+}
+
 
 #uiContainer {
   flex-grow: 2;
@@ -138,6 +180,8 @@ export default {
 }
 
 .flexLeft {
+  display: flex;
+  flex-flow: column;
   width: 20%;
   height: 100%;
   order: 1;
